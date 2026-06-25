@@ -3,7 +3,7 @@ from kalman.dynamics.base import DynamicsModel
 
 
 class ClohessyWiltshireDynamics(DynamicsModel):
-    def __init__(self, n: float, q_scale: float = 1.0):
+    def __init__(self, n: float, q_scale: float = 1e-8):
         self._n = n
         self._q_scale = q_scale
 
@@ -70,8 +70,7 @@ class ClohessyWiltshireDynamics(DynamicsModel):
         return Phi
 
     def Q(self, dt: float) -> np.ndarray:
-        q = self._q_scale * dt
-        Q3 = q * np.eye(3)
+        Q3 = self._q_scale * np.eye(3)
         Q = np.zeros((6, 6))
         Q[0:3, 0:3] = Q3 * (dt ** 3 / 3)
         Q[0:3, 3:6] = Q3 * (dt ** 2 / 2)

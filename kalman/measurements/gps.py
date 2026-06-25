@@ -5,16 +5,16 @@ from kalman.utils.coordinates import eci_to_ecef, gmst_from_jd
 
 class GPSPosition(MeasurementModel):
     def __init__(self, jd: float):
-        self._jd = jd
+        self.jd = jd
 
     def h(self, x: np.ndarray) -> np.ndarray:
         r_eci = x[:3]
-        gmst = gmst_from_jd(self._jd)
+        gmst = gmst_from_jd(self.jd)
         r_ecef = eci_to_ecef(r_eci, gmst)
         return r_ecef
 
     def jacobian(self, x: np.ndarray) -> np.ndarray:
-        gmst = gmst_from_jd(self._jd)
+        gmst = gmst_from_jd(self.jd)
         c, s = np.cos(gmst), np.sin(gmst)
         C = np.array([
             [c, s, 0],
@@ -28,7 +28,7 @@ class GPSPosition(MeasurementModel):
 
 class GPSPositionVelocity(MeasurementModel):
     def __init__(self, jd: float):
-        self._jd = jd
+        self.jd = jd
 
     @property
     def measurement_dim(self) -> int:
@@ -37,7 +37,7 @@ class GPSPositionVelocity(MeasurementModel):
     def h(self, x: np.ndarray) -> np.ndarray:
         r_eci = x[:3]
         v_eci = x[3:6]
-        gmst = gmst_from_jd(self._jd)
+        gmst = gmst_from_jd(self.jd)
         gmst_dot = 7.2921150e-5
         c, s = np.cos(gmst), np.sin(gmst)
         C = np.array([
@@ -55,7 +55,7 @@ class GPSPositionVelocity(MeasurementModel):
         return np.concatenate([r_ecef, v_ecef])
 
     def jacobian(self, x: np.ndarray) -> np.ndarray:
-        gmst = gmst_from_jd(self._jd)
+        gmst = gmst_from_jd(self.jd)
         gmst_dot = 7.2921150e-5
         c, s = np.cos(gmst), np.sin(gmst)
         C = np.array([

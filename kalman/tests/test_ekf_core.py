@@ -62,3 +62,34 @@ def test_predict_consistency():
     ekf.predict(60.0)
     nees = ekf.nees(x_true)
     assert nees < 10.0
+
+
+def test_gated_update_accepts_good_measurement():
+    dynamics = TwoBodyDynamics()
+    r0 = np.array([7000e3, 100.0, 50.0])
+    v0 = np.array([0.0, 7546.0, 10.0])
+    x0 = np.concatenate([r0, v0])
+    P0 = np.eye(6) * 1e6
+    state = State(x0.copy(), P0)
+    ekf = EKF(dynamics, state)
+    meas = RangeBearing()
+    z = meas.h(x0)
+    R = np.diag([1e3, np.deg2rad(0.1) ** 2, np.deg2rad(0.1) ** 2])
+    accepted = ekf.gated_update(meas, z, R, alpha=0.05)
+    assert accepted
+
+
+def test_gated_update_rejects_outlier():
+    dynamics = TwoBodyDynamics()
+    r0 = np.array([7000e3, 100.0, 50.0])
+    v0 = np.array([0.0, 7546.0, 10.0])
+    x0 = np.concatenate([r0, v0])
+    P0 = np.diag([1e2, 1e2, 1e2, 1e-2, 1e-2, 1e-2])
+    state = State(x0.copy(), P0)
+    ekf = EKF(dynamics, state)
+    meas = RangeBearing()
+    z = meas.h(x0).copy()
+    z[1] += np.deg2rad(10.0)
+    R = np.diag([1e3, np.deg2rad(0.1) ** 2, np.deg2rad(0.1) ** 2])
+    accepted = ekf.gated_update(meas, z, R, alpha=0.01)
+    assert not accepted

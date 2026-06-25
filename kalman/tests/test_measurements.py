@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
 from kalman.measurements.range_bearing import RangeBearing
 from kalman.measurements.range_rate import RangeRate
 from kalman.measurements.angles_only import AnglesOnly
 from kalman.measurements.gps import GPSPosition, GPSPositionVelocity
 from kalman.measurements.relative_pose import RelativePosition, RelativePose
+from kalman.measurements.range_bearing_from_station import RangeBearingFromStation
 
 
 def test_range_bearing_h():
@@ -85,6 +87,30 @@ def test_relative_pose():
     assert np.allclose(z, x)
 
 
+def test_range_bearing_from_station():
+    r_station = np.array([6378e3, 0.0, 0.0])
+    meas = RangeBearingFromStation(r_station)
+    r = np.array([7000e3, 100.0, 50.0])
+    v = np.array([0.0, 7546.0, 10.0])
+    x = np.concatenate([r, v])
+    z = meas.h(x)
+    r_rel = r - r_station
+    expected_rho = np.linalg.norm(r_rel)
+    assert abs(z[0] - expected_rho) < 1.0
+    assert len(z) == 3
+
+
+def test_range_bearing_from_station_jacobian():
+    r_station = np.array([6378e3, 0.0, 0.0])
+    meas = RangeBearingFromStation(r_station)
+    r = np.array([7000e3, 100.0, 50.0])
+    v = np.array([0.0, 7546.0, 10.0])
+    x = np.concatenate([r, v])
+    H = meas.jacobian(x)
+    H_num = _numeric_jac(meas, x, eps=1e0)
+    assert np.allclose(H, H_num, atol=1e-4)
+
+
 def _numeric_jac(meas, x, eps=1e-8):
     m = len(meas.h(x))
     n = len(x)
@@ -94,6 +120,3 @@ def _numeric_jac(meas, x, eps=1e-8):
         dx[i] = eps
         H[:, i] = (meas.h(x + dx) - meas.h(x - dx)) / (2 * eps)
     return H
-
-
-import pytest

@@ -7,7 +7,7 @@ from kalman.dynamics.two_body import rk4
 class J2PerturbedDynamics(DynamicsModel):
     def __init__(self, mu: float = MU_EARTH, j2: float = J2,
                  r_e: float = R_EARTH, cd: float = 0.0,
-                 area_mass_ratio: float = 0.0, q_scale: float = 1.0):
+                 area_mass_ratio: float = 0.0, q_scale: float = 1e-8):
         self._mu = mu
         self._j2 = j2
         self._r_e = r_e
@@ -61,8 +61,7 @@ class J2PerturbedDynamics(DynamicsModel):
         return Phi
 
     def Q(self, dt: float) -> np.ndarray:
-        q = self._q_scale * dt
-        Q3 = q * np.eye(3)
+        Q3 = self._q_scale * np.eye(3)
         Q = np.zeros((6, 6))
         Q[0:3, 0:3] = Q3 * (dt ** 3 / 3)
         Q[0:3, 3:6] = Q3 * (dt ** 2 / 2)

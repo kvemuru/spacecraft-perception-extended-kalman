@@ -92,6 +92,35 @@ def test_hcw_vs_cw_circular():
     assert np.allclose(x_cw, x_hcw, atol=1.0)
 
 
+def test_j2_mismatch_ekf_converges():
+    from kalman.ekf_core.ekf import EKF
+    from kalman.ekf_core.state import State
+    from kalman.measurements.gps import GPSPositionVelocity
+    r0 = np.array([7000e3, 0.0, 0.0])
+    v0 = np.array([0.0, np.sqrt(MU_EARTH / 7000e3), 0.0])
+    x0 = np.concatenate([r0, v0])
+    truth = J2PerturbedDynamics(mu=MU_EARTH)
+    filt = TwoBodyDynamics(mu=MU_EARTH, q_scale=1e-4)
+    state = State(x0.copy(), np.diag([1e6, 1e6, 1e6, 1e2, 1e2, 1e2]))
+    ekf = EKF(filt, state)
+    jd = 2460000.0
+    x_true = x0.copy()
+    errors = []
+    dt = 10.0
+    for step in range(200):
+        x_true = truth.propagate(x_true, dt)
+        ekf.predict(dt)
+        if step % 3 == 0:
+            meas = GPSPositionVelocity(jd + step * dt / 86400.0)
+            z = meas.h(x_true)
+            R = np.diag([10.0 ** 2] * 3 + [0.1 ** 2] * 3)
+            ekf.update(meas, z, R)
+        err = np.linalg.norm(ekf.state.x[:3] - x_true[:3])
+        errors.append(err)
+    last_50 = np.mean(errors[-50:])
+    assert last_50 < 1000.0
+
+
 def _numeric_stm(dyn, x, dt, eps=1e-6):
     n = len(x)
     Phi = np.eye(n)

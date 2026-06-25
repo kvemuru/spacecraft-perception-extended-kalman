@@ -1,8 +1,10 @@
+from __future__ import annotations
 import numpy as np
 from kalman.fusion.decentralized import DecentralizedFusion
 from kalman.fusion.local_filter import LocalFilter
 from kalman.fusion.covariance_intersection import fuse_pair
 from kalman.ekf_core.state import State
+from kalman.ekf_core.interfaces import MeasurementModel
 from kalman.dynamics.two_body import TwoBodyDynamics
 from kalman.dynamics.j2_perturbed import J2PerturbedDynamics
 from kalman.measurements.range_bearing import RangeBearing
@@ -26,9 +28,10 @@ class MultiSensorFusion:
         lf = LocalFilter(self.dynamics, state, meas, R, sensor_id)
         self.fusion.add_filter(lf)
 
-    def add_radar(self, R: np.ndarray, sensor_id: str = "radar") -> None:
+    def add_radar(self, R: np.ndarray, sensor_id: str = "radar",
+                  meas_model: MeasurementModel | None = None) -> None:
         state = State(self._x0.copy(), self._P0.copy())
-        meas = RangeBearing()
+        meas = meas_model if meas_model is not None else RangeBearing()
         lf = LocalFilter(self.dynamics, state, meas, R, sensor_id)
         self.fusion.add_filter(lf)
 

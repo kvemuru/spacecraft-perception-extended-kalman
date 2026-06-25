@@ -4,7 +4,7 @@ from kalman.utils.constants import MU_EARTH
 
 
 class TwoBodyDynamics(DynamicsModel):
-    def __init__(self, mu: float = MU_EARTH, q_scale: float = 1.0):
+    def __init__(self, mu: float = MU_EARTH, q_scale: float = 1e-8):
         self._mu = mu
         self._q_scale = q_scale
 
@@ -39,8 +39,7 @@ class TwoBodyDynamics(DynamicsModel):
         return self.stm_analytic(x, dt)
 
     def Q(self, dt: float) -> np.ndarray:
-        q = self._q_scale * dt
-        Q3 = q * np.eye(3)
+        Q3 = self._q_scale * np.eye(3)
         Q = np.zeros((6, 6))
         Q[0:3, 0:3] = Q3 * (dt ** 3 / 3)
         Q[0:3, 3:6] = Q3 * (dt ** 2 / 2)

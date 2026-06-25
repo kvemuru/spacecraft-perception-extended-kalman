@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg
+from scipy.stats import chi2
 from kalman.ekf_core.interfaces import DynamicsModel, MeasurementModel
 from kalman.ekf_core.state import State
 
@@ -49,6 +50,16 @@ class EKF:
         dt = target_time - self.state.timestamp
         if dt > 0:
             self.predict(dt)
+
+    def gated_update(self, meas: MeasurementModel, z: np.ndarray,
+                     R: np.ndarray, alpha: float = 0.01) -> bool:
+        nis = self.nis(z, meas, R)
+        dof = len(z)
+        threshold = chi2.ppf(1 - alpha, dof)
+        if nis < threshold:
+            self.update(meas, z, R)
+            return True
+        return False
 
     def nees(self, x_true: np.ndarray) -> float:
         d = self.state.x - x_true
