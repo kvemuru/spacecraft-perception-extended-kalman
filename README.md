@@ -1,6 +1,6 @@
 # kalman — Modular Extended Kalman Filter for Space Perception
 
-A modular EKF framework for space domain awareness tasks: orbit determination, relative navigation & docking, space object tracking, and multi-sensor fusion.
+A modular Extended Kalman Filter framework for spacecraft perception, organized around four core space domain awareness tasks: absolute orbit determination, relative navigation & docking, space object tracking, and multi-sensor fusion. The design separates the EKF into four pluggable layers — **dynamics models** (how the state evolves), **measurement models** (how sensors observe the state), a **generic EKF core** (predict/update cycle with Joseph-form covariance updates and iterated IEKF refinement), and a **decentralized fusion layer** (per-sensor local EKFs publishing information vectors, fused via covariance intersection to handle unknown cross-correlations). Each layer defines abstract interfaces so users can swap in new motion models or sensor types without touching the filter logic. Pre-built application wrappers wire these layers together for common use cases, while utility modules handle coordinate frames (ECI↔ECEF↔LVLH), time conversions, and physical constants.
 
 ## Architecture
 
