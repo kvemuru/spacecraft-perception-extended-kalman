@@ -1,3 +1,5 @@
+"""Julian Date / MJD / datetime conversions."""
+
 import numpy as np
 from datetime import datetime, timedelta, timezone
 

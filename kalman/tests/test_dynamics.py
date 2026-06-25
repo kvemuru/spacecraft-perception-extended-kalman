@@ -3,7 +3,7 @@ from kalman.dynamics.two_body import TwoBodyDynamics, rk4
 from kalman.dynamics.j2_perturbed import J2PerturbedDynamics
 from kalman.dynamics.relative_cw import ClohessyWiltshireDynamics
 from kalman.dynamics.relative_hcw import HillClohessyWiltshireDynamics
-from kalman.utils.constants import MU_EARTH
+from kalman.utils.constants import MU_EARTH, R_EARTH
 
 
 def test_two_body_propagate():
@@ -90,6 +90,58 @@ def test_hcw_vs_cw_circular():
     x_cw = dyn_cw.propagate(x_rel, dt)
     x_hcw = dyn_hcw.propagate(x_rel, dt)
     assert np.allclose(x_cw, x_hcw, atol=1.0)
+
+
+def test_exponential_atm_density():
+    from kalman.dynamics.atmosphere import exponential_atm_density
+    assert exponential_atm_density(0.0) > 1.0
+    assert exponential_atm_density(100_000.0) > 0
+    assert exponential_atm_density(100_000.0) < 1.0
+    assert exponential_atm_density(400_000.0) < exponential_atm_density(200_000.0)
+    assert exponential_atm_density(1_000_000.0) > 0
+
+
+def test_drag_with_exponential_model():
+    dyn = J2PerturbedDynamics(cd=2.2, area_mass_ratio=0.01)
+    r = np.array([R_EARTH + 400_000.0, 0.0, 0.0])
+    v = np.array([0.0, 7666.0, 0.0])
+    x = np.concatenate([r, v])
+    x1 = dyn.propagate(x, 60.0)
+    r1_norm = np.linalg.norm(x1[:3])
+    assert r1_norm < np.linalg.norm(r)
+
+
+def test_j2_mismatch_at_multiple_altitudes():
+    from kalman.ekf_core.ekf import EKF
+    from kalman.ekf_core.state import State
+    from kalman.measurements.gps import GPSPositionVelocity
+    altitudes = [400_000.0, 20_000_000.0, 35_786_000.0]
+    for alt in altitudes:
+        r_norm = R_EARTH + alt
+        v_circ = np.sqrt(MU_EARTH / r_norm)
+        r0 = np.array([r_norm, 0.0, 0.0])
+        v0 = np.array([0.0, v_circ, 0.0])
+        x0 = np.concatenate([r0, v0])
+        truth = J2PerturbedDynamics(mu=MU_EARTH)
+        filt = TwoBodyDynamics(mu=MU_EARTH, q_scale=1e-4)
+        state = State(x0.copy(), np.diag([1e6, 1e6, 1e6, 1e2, 1e2, 1e2]))
+        ekf = EKF(filt, state)
+        jd = 2460000.0
+        x_true = x0.copy()
+        errors = []
+        dt = 10.0
+        for step in range(200):
+            x_true = truth.propagate(x_true, dt)
+            ekf.predict(dt)
+            if step % 3 == 0:
+                meas = GPSPositionVelocity(jd + step * dt / 86400.0)
+                z = meas.h(x_true)
+                R = np.diag([10.0 ** 2] * 3 + [0.1 ** 2] * 3)
+                ekf.update(meas, z, R)
+            err = np.linalg.norm(ekf.state.x[:3] - x_true[:3])
+            errors.append(err)
+        last_50 = np.mean(errors[-50:])
+        assert last_50 < 1000.0
 
 
 def test_j2_mismatch_ekf_converges():

@@ -1,3 +1,5 @@
+"""Per-sensor EKF wrapper for decentralized fusion."""
+
 import numpy as np
 from kalman.ekf_core.ekf import EKF
 from kalman.ekf_core.state import State

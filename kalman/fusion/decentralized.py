@@ -1,6 +1,8 @@
+"""Decentralized fusion orchestrator managing multiple LocalFilters."""
+
 import numpy as np
 from kalman.fusion.local_filter import LocalFilter
-from kalman.fusion.covariance_intersection import fuse_many
+from kalman.fusion.covariance_intersection import fuse_many, fuse_batch
 from kalman.ekf_core.state import State
 from kalman.ekf_core.interfaces import DynamicsModel
 
@@ -24,9 +26,9 @@ class DecentralizedFusion:
     def update_sensor(self, sensor_id: str, z: np.ndarray) -> None:
         self.filters[sensor_id].update(z)
 
-    def fuse(self) -> State:
+    def fuse(self, batch: bool = False) -> State:
         states = [f.state for f in self.filters.values()]
-        return fuse_many(states)
+        return fuse_batch(states) if batch else fuse_many(states)
 
     def get_filter_state(self, sensor_id: str) -> State:
         return self.filters[sensor_id].state

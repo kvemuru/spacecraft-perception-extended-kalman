@@ -1,3 +1,5 @@
+"""High-level multi-sensor fusion system with radar, camera, GPS."""
+
 from __future__ import annotations
 import numpy as np
 from kalman.fusion.decentralized import DecentralizedFusion

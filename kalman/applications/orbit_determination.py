@@ -1,3 +1,5 @@
+"""Orbit determination application with radar measurements."""
+
 import numpy as np
 from kalman.ekf_core.ekf import EKF
 from kalman.ekf_core.state import State

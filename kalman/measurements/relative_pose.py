@@ -1,3 +1,5 @@
+"""Relative position / full-pose measurement models for docking."""
+
 import numpy as np
 from kalman.measurements.base import MeasurementModel
 

@@ -1,6 +1,6 @@
 import numpy as np
 from kalman.fusion.local_filter import LocalFilter
-from kalman.fusion.covariance_intersection import fuse_pair, fuse_many
+from kalman.fusion.covariance_intersection import fuse_pair, fuse_many, fuse_batch
 from kalman.fusion.decentralized import DecentralizedFusion
 from kalman.ekf_core.state import State
 from kalman.dynamics.two_body import TwoBodyDynamics
@@ -81,3 +81,49 @@ def test_decentralized_fusion():
 
     fused = df.fuse()
     assert np.allclose(fused.P, fused.P.T)
+
+
+def test_fuse_batch_three():
+    x1 = np.array([100.0, 50.0, 20.0])
+    P1 = np.diag([10.0, 10.0, 10.0])
+    x2 = np.array([102.0, 48.0, 21.0])
+    P2 = np.diag([100.0, 100.0, 100.0])
+    x3 = np.array([99.0, 51.0, 19.5])
+    P3 = np.diag([50.0, 50.0, 50.0])
+    s1 = State(x1, P1)
+    s2 = State(x2, P2)
+    s3 = State(x3, P3)
+    fused = fuse_batch([s1, s2, s3])
+    assert np.allclose(fused.P, fused.P.T)
+    assert abs(fused.x[0] - 100.0) < 2.0
+
+
+def test_decentralized_batch_fusion():
+    dyn = TwoBodyDynamics()
+    x0 = np.array([7000e3, 0.0, 0.0, 0.0, 7546.0, 0.0])
+    P0 = np.eye(6) * 1e6
+
+    state1 = State(x0.copy(), P0.copy())
+    state2 = State(x0.copy(), P0.copy())
+    state3 = State(x0.copy(), P0.copy())
+    meas = RangeBearing()
+    R = np.diag([1e3, np.deg2rad(0.1) ** 2, np.deg2rad(0.1) ** 2])
+    lf1 = LocalFilter(dyn, state1, meas, R, "a")
+    lf2 = LocalFilter(dyn, state2, meas, R, "b")
+    lf3 = LocalFilter(dyn, state3, meas, R, "c")
+
+    df = DecentralizedFusion(dyn, 6)
+    df.add_filter(lf1)
+    df.add_filter(lf2)
+    df.add_filter(lf3)
+    df.predict_all(10.0)
+
+    z = meas.h(x0)
+    df.update_sensor("a", z + np.array([10.0, 0.01, 0.01]))
+    df.update_sensor("b", z + np.array([-10.0, -0.01, -0.01]))
+    df.update_sensor("c", z + np.array([5.0, 0.005, -0.005]))
+
+    fused_seq = df.fuse(batch=False)
+    fused_batch = df.fuse(batch=True)
+    assert np.allclose(fused_seq.P, fused_seq.P.T)
+    assert np.allclose(fused_batch.P, fused_batch.P.T)

@@ -1,7 +1,10 @@
+"""J2-perturbed orbital dynamics with optional atmospheric drag and SRP."""
+
 import numpy as np
 from kalman.dynamics.base import DynamicsModel
 from kalman.utils.constants import MU_EARTH, J2, R_EARTH
 from kalman.dynamics.two_body import rk4
+from kalman.dynamics.atmosphere import exponential_atm_density
 
 
 class J2PerturbedDynamics(DynamicsModel):
@@ -35,9 +38,8 @@ class J2PerturbedDynamics(DynamicsModel):
         ])
         acc = acc + j2_acc
         if self._cd != 0.0 and self._amr != 0.0:
-            h = np.linalg.norm(np.cross(r, v))
-            r_p = self._r_e + 0.0
-            rho = 1.0
+            alt = r_norm - self._r_e
+            rho = exponential_atm_density(alt)
             drag = -0.5 * self._cd * self._amr * rho * np.linalg.norm(v) * v
             acc = acc + drag
         return np.concatenate([v, acc])

@@ -1,3 +1,5 @@
+"""Space object tracking application for debris / unknown objects."""
+
 import numpy as np
 from kalman.ekf_core.ekf import EKF
 from kalman.ekf_core.state import State

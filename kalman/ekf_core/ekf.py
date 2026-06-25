@@ -1,3 +1,5 @@
+"""Extended Kalman Filter core: predict, update (Joseph form), IEKF, gating."""
+
 import numpy as np
 import scipy.linalg
 from scipy.stats import chi2

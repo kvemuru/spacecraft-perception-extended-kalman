@@ -1,3 +1,5 @@
+"""Doppler range-rate measurement model."""
+
 import numpy as np
 from kalman.measurements.base import MeasurementModel
 

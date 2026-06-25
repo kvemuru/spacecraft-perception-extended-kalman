@@ -1,3 +1,5 @@
+"""Radar range, azimuth, elevation measurement model."""
+
 import numpy as np
 from kalman.measurements.base import MeasurementModel
 

@@ -1,3 +1,5 @@
+"""Two-body Keplerian dynamics with RK4 integration and analytic STM."""
+
 import numpy as np
 from kalman.dynamics.base import DynamicsModel
 from kalman.utils.constants import MU_EARTH

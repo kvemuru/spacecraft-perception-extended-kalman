@@ -1,46 +1,57 @@
 # kalman — Modular Extended Kalman Filter for Space Perception
 
-A modular Extended Kalman Filter framework for spacecraft perception, organized around four core space domain awareness tasks: absolute orbit determination, relative navigation & docking, space object tracking, and multi-sensor fusion. The design separates the EKF into four pluggable layers — **dynamics models** (how the state evolves), **measurement models** (how sensors observe the state), a **generic EKF core** (predict/update cycle with Joseph-form covariance updates and iterated IEKF refinement), and a **decentralized fusion layer** (per-sensor local EKFs publishing information vectors, fused via covariance intersection to handle unknown cross-correlations). Each layer defines abstract interfaces so users can swap in new motion models or sensor types without touching the filter logic. Pre-built application wrappers wire these layers together for common use cases, while utility modules handle coordinate frames (ECI↔ECEF↔LVLH), time conversions, and physical constants.
+A modular Extended Kalman Filter framework for spacecraft perception, organized around four core space domain awareness tasks: absolute orbit determination, relative navigation & docking, space object tracking, and multi-sensor fusion. The design separates the EKF into four pluggable layers — **dynamics models** (how the state evolves), **measurement models** (how sensors observe the state), a **generic EKF core** (predict/update cycle with Joseph-form covariance updates and iterated IEKF refinement), and a **decentralized fusion layer** (per-sensor local EKFs fused via covariance intersection to handle unknown cross-correlations). Each layer defines abstract interfaces so users can swap in new motion models or sensor types without touching the filter logic. Advanced estimation via **IMM** (Interacting Multiple Model) handles maneuvering targets. Pre-built application wrappers wire these layers together for common use cases, while utility modules handle coordinate frames (ECI↔ECEF↔LVLH), time conversions, and physical constants.
 
 ## Architecture
 
 ```
 kalman/
-├── ekf_core/           # Generic EKF engine
-│   ├── interfaces.py   # ABCs: DynamicsModel, MeasurementModel
-│   ├── state.py        # State dataclass (x, P, timestamp)
-│   └── ekf.py          # predict(), update() (Joseph form), IEKF, NEES/NIS
-├── dynamics/           # Pluggable motion models
-│   ├── two_body.py     # Keplerian: r̈ = -μr/‖r‖³, RK4 + analytic STM
-│   ├── j2_perturbed.py # J2 + optional drag & SRP
-│   ├── relative_cw.py  # Clohessy-Wiltshire (circular, closed-form STM)
-│   └── relative_hcw.py # Hill-CW (elliptical, numeric STM)
-├── measurements/       # Pluggable sensor models
-│   ├── range_bearing.py   # Radar: [ρ, az, el]
-│   ├── range_rate.py      # Doppler: [ρ̇]
-│   ├── angles_only.py     # Optical: [az, el]
-│   ├── gps.py             # GPS position/velocity (ECI↔ECEF)
-│   └── relative_pose.py   # Relative position / full 6-DOF pose
-├── fusion/             # Decentralized fusion
-│   ├── local_filter.py        # Per-sensor EKF wrapper
-│   ├── covariance_intersection.py  # Optimal CI via golden-section search
-│   └── decentralized.py       # Master orchestrator for N local EKFs
-├── applications/       # Use-case wrappers
+├── ekf_core/             # Generic EKF engine
+│   ├── interfaces.py     # ABCs: DynamicsModel, MeasurementModel
+│   ├── state.py          # State dataclass (x, P, timestamp)
+│   └── ekf.py            # predict(), update() (Joseph form), IEKF, NEES/NIS, gating
+├── dynamics/             # Pluggable motion models
+│   ├── two_body.py       # Keplerian: r̈ = -μr/‖r‖³, RK4 + analytic STM
+│   ├── j2_perturbed.py   # J2 + atmospheric drag (exponential density) & SRP
+│   ├── atmosphere.py     # Multi-band exponential density model (0–1000 km)
+│   ├── relative_cw.py    # Clohessy-Wiltshire (circular, closed-form STM)
+│   └── relative_hcw.py   # Hill-CW (elliptical, numeric STM)
+├── measurements/         # Pluggable sensor models
+│   ├── range_bearing.py            # Radar: [ρ, az, el]
+│   ├── range_rate.py               # Doppler: [ρ̇]
+│   ├── range_bearing_from_station.py  # Ground-station radar
+│   ├── angles_only.py              # Optical: [az, el]
+│   ├── gps.py                      # GPS position/velocity (ECI↔ECEF)
+│   └── relative_pose.py            # Relative position / full 6-DOF pose
+├── fusion/               # Decentralized fusion
+│   ├── local_filter.py              # Per-sensor EKF wrapper
+│   ├── covariance_intersection.py   # Optimal CI: pairwise, sequential, batch
+│   └── decentralized.py            # Master orchestrator for N local EKFs
+├── estimation/           # Advanced estimation filters
+│   └── imm.py            # Interacting Multiple Model (IMM) filter
+├── applications/         # Use-case wrappers
 │   ├── orbit_determination.py
 │   ├── relative_nav_docking.py
 │   ├── space_object_tracking.py
 │   └── multi_sensor_fusion.py
 ├── utils/
-│   ├── constants.py    # μ⊕, J₂, R⊕, ω⊕, c, …
-│   ├── coordinates.py  # ECI↔ECEF↔LVLH, GMST, rotation helpers
-│   └── time_.py        # JD / MJD / UTC conversions
-└── tests/              # pytest suite (36 tests)
-    ├── test_ekf_core.py
-    ├── test_dynamics.py
-    ├── test_measurements.py
-    ├── test_fusion.py
-    ├── test_applications.py
-    └── test_utils.py
+│   ├── constants.py     # μ⊕, J₂, R⊕, ω⊕, c, …
+│   ├── coordinates.py   # ECI↔ECEF↔LVLH, GMST, rotation helpers
+│   └── time_.py         # JD / MJD / UTC conversions
+├── tests/                # pytest suite (51 tests)
+│   ├── test_ekf_core.py
+│   ├── test_dynamics.py  # incl. exponential atm, drag, multi-altitude J2
+│   ├── test_measurements.py
+│   ├── test_fusion.py    # incl. batch CI
+│   ├── test_imm.py       # IMM predict/update, mode convergence
+│   ├── test_applications.py
+│   └── test_utils.py
+├── examples/
+│   └── multi_sensor_fusion_demo.py  # Radar + camera + GPS fusion demo
+├── scripts/
+│   └── gen_api_docs.py   # Auto-generate API_REFERENCE.md
+├── API_REFERENCE.md       # Auto-generated API docs
+└── README.md
 ```
 
 ## Quick Start
@@ -53,14 +64,11 @@ python examples/multi_sensor_fusion_demo.py
 Expected output (varies due to RNG):
 
 ```
-step   0  position error: 234.86 m
-step  10  position error: 471.34 m
-step  20  position error: 948.85 m
-step  30  position error: 2309.19 m
-step  40  position error: 1238.29 m
+step   0  fused:   295.7 m  gps-only:   17.7 m
+step  40  fused:   218.2 m  gps-only:    3.5 m
+step  80  fused:    44.8 m  gps-only:    3.0 m
 
-mean position error: 1075.94 m
-final position error: 1558.91 m
+Mean position error — fused: 170.1 m  gps-only: 3.3 m
 ```
 
 ## Usage
@@ -102,7 +110,8 @@ python -m pytest kalman/tests/ -v
 | Model | State | Equations | Use Case |
 |---|---|---|---|
 | `two_body` | 6 (r, v) | RK4 integration | Orbit determination, tracking |
-| `j2_perturbed` | 6+ | + J2 / drag / SRP | High-precision OD |
+| `j2_perturbed` | 6 | J2 + exponential drag + SRP | High-precision OD |
+| `atmosphere` | — | Multi-band exponential ρ(h) | Drag computation (0–1000 km) |
 | `relative_cw` | 6 (dr, dv) | Closed-form STM | Circular-orbit rendezvous |
 | `relative_hcw` | 6 (dr, dv) | Numeric STM | Elliptical-orbit rendezvous |
 
@@ -111,18 +120,21 @@ python -m pytest kalman/tests/ -v
 | Model | z | h(x) | Typical Sensor |
 |---|---|---|---|
 | `range_bearing` | 3 | [‖r‖, az, el] | Radar, LIDAR |
+| `range_bearing_from_station` | 3 | [‖r−r₀‖, az, el] | Ground station radar |
 | `range_rate` | 1 | (r·v)/‖r‖ | Doppler radar |
 | `angles_only` | 2 | [az, el] | Optical camera |
 | `gps` | 3 or 6 | ECI→ECEF transform | GPS receiver |
 | `relative_pose` | 3 or 6 | Identity on dr, dv | Docking camera |
 
-### Fusion
+### Estimation
 
-Three layers are implemented in `fusion/`:
-
-1. **LocalFilter** — wraps a single EKF with one dynamics + one measurement model
-2. **CovarianceIntersection** — fuses two or more State estimates while handling unknown cross-correlations; optimal weight α found via golden-section search on log-det
-3. **DecentralizedFusion** — orchestrator holding N LocalFilters, each predicting and updating independently, then fusing via CI
+| Filter | Description |
+|---|---|
+| `EKF` | Core predict/update, Joseph form, IEKF, innovation gating |
+| `IMM` | Interacting Multiple Model for maneuvering targets |
+| `LocalFilter` | Per-sensor EKF wrapper for decentralized fusion |
+| `CovarianceIntersection` | Pairwise, sequential, or batch fusion (optimal α) |
+| `DecentralizedFusion` | Orchestrator holding N LocalFilters |
 
 ## References
 

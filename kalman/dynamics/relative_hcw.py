@@ -1,3 +1,5 @@
+"""Hill-Clohessy-Wiltshire relative motion for elliptical orbits (numerical STM)."""
+
 import numpy as np
 from kalman.dynamics.base import DynamicsModel
 from kalman.dynamics.two_body import rk4

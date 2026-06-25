@@ -1,3 +1,5 @@
+"""State vector dataclass with covariance and timestamp."""
+
 import numpy as np
 from dataclasses import dataclass, field
 

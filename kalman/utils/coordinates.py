@@ -1,3 +1,5 @@
+"""Coordinate frame transforms: ECI, ECEF, LVLH, GMST."""
+
 import numpy as np
 from kalman.utils.constants import OMEGA_EARTH
 

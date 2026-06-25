@@ -1,3 +1,5 @@
+"""Relative navigation and docking application with CW dynamics."""
+
 import numpy as np
 from kalman.ekf_core.ekf import EKF
 from kalman.ekf_core.state import State

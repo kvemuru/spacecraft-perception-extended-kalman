@@ -1,3 +1,5 @@
+"""Physical constants for Earth and solar system."""
+
 import numpy as np
 
 MU_EARTH = 3.986004418e14

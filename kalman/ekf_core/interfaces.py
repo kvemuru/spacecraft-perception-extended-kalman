@@ -1,3 +1,5 @@
+"""Abstract base classes for DynamicsModel and MeasurementModel."""
+
 import numpy as np
 from abc import ABC, abstractmethod
 

@@ -1,3 +1,5 @@
+"""Clohessy-Wiltshire linearized relative motion for circular orbits."""
+
 import numpy as np
 from kalman.dynamics.base import DynamicsModel
 

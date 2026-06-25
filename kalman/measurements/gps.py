@@ -1,3 +1,5 @@
+"""GPS position/velocity measurement models with ECI-to-ECEF transform."""
+
 import numpy as np
 from kalman.measurements.base import MeasurementModel
 from kalman.utils.coordinates import eci_to_ecef, gmst_from_jd
