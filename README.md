@@ -47,7 +47,8 @@ kalman/
 │   ├── test_applications.py
 │   └── test_utils.py
 ├── examples/
-│   └── multi_sensor_fusion_demo.py  # Radar + camera + GPS fusion demo
+│   ├── multi_sensor_fusion_demo.py  # Radar + camera + GPS fusion demo
+│   └── compare_errors_demo.py       # Step-by-step sensor config comparison
 ├── scripts/
 │   └── gen_api_docs.py   # Auto-generate API_REFERENCE.md
 ├── API_REFERENCE.md       # Auto-generated API docs
@@ -70,6 +71,34 @@ step  80  fused:    44.8 m  gps-only:    3.0 m
 
 Mean position error — fused: 170.1 m  gps-only: 3.3 m
 ```
+
+### Sensor Comparison Demo
+
+Compare four configurations side-by-side:
+
+```bash
+python examples/compare_errors_demo.py
+```
+
+```
+ step    GPS-only    Radar-only     Radar+GPS         Fused
+-----------------------------------------------------------
+    0       15.58         296.5          18.4         295.6
+   25        3.58         188.3           9.1         187.2
+   50        3.50         200.4           2.4         199.2
+   75        3.20         170.9           2.6         170.2
+  100        3.90         193.7           1.9         192.9
+  125        3.63          98.2           3.3          97.7
+  150        1.97          71.9           3.4          71.6
+  175        1.33         106.9           2.5         106.5
+
+GPS-only         mean:      3.6 m  final:      1.7 m
+Radar-only       mean:    205.3 m  final:    164.0 m
+Radar+GPS EKF    mean:      3.3 m  final:      2.3 m
+Fused            mean:    204.2 m  final:    163.4 m
+```
+
+GPS delivers ~3 m accuracy regardless of other sensors. Radar-only converges to ~170 m bounded error via range/bearing. Centralized EKF (Radar+GPS) slightly outperforms GPS alone. Decentralized CI fusion is conservative — it guarantees consistency under unknown cross-correlations but gets pulled by the overconfident radar filter's small covariance, producing fused errors similar to radar-only.
 
 ## Usage
 
