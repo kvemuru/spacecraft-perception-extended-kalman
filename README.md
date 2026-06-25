@@ -130,11 +130,11 @@ Three layers are implemented in `fusion/`:
 
 | Title | Author(s) | Area |
 |---|---|---|
-| *Optimal State Estimation* | Dan Simon | EKF theory, Joseph form, IEKF |
-| *Fundamentals of Spacecraft Attitude Determination and Control* | Markley & Crassidis | Spacecraft navigation, sensor fusion |
-| *Orbital Mechanics for Engineering Students* | Howard Curtis | Two-body problem, CW equations, coordinate frames |
-| *Statistical Orbit Determination* | Tapley, Schutz, Born | Orbit determination with EKF / UKF |
-| *Estimation with Applications to Tracking and Navigation* | Bar-Shalom, Li, Kirubarajan | Tracking, sensor fusion, recursive estimation |
+| [*Optimal State Estimation*](https://onlinelibrary.wiley.com/doi/book/10.1002/0470045345) | Dan Simon | EKF theory, Joseph form, IEKF |
+| [*Fundamentals of Spacecraft Attitude Determination and Control*](https://link.springer.com/book/10.1007/978-1-4939-0802-8) | Markley & Crassidis | Spacecraft navigation, sensor fusion |
+| [*Orbital Mechanics for Engineering Students*](https://shop.elsevier.com/books/orbital-mechanics-for-engineering-students/curtis/978-0-443-29015-2) | Howard Curtis | Two-body problem, CW equations, coordinate frames |
+| [*Statistical Orbit Determination*](https://www.amazon.com/Statistical-Orbit-Determination-Bob-Schutz/dp/0126836302) | Tapley, Schutz, Born | Orbit determination with EKF / UKF |
+| [*Estimation with Applications to Tracking and Navigation*](https://onlinelibrary.wiley.com/doi/book/10.1002/0471221279) | Bar-Shalom, Li, Kirubarajan | Tracking, sensor fusion, recursive estimation |
 | *Kalman and Bayesian Filters in Python* | Roger Labbé ([free online](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python)) | Practical EKF with Python |
 
 ### Key Papers
