@@ -123,3 +123,34 @@ Three layers are implemented in `fusion/`:
 1. **LocalFilter** — wraps a single EKF with one dynamics + one measurement model
 2. **CovarianceIntersection** — fuses two or more State estimates while handling unknown cross-correlations; optimal weight α found via golden-section search on log-det
 3. **DecentralizedFusion** — orchestrator holding N LocalFilters, each predicting and updating independently, then fusing via CI
+
+## References
+
+### Books
+
+| Title | Author(s) | Area |
+|---|---|---|
+| *Optimal State Estimation* | Dan Simon | EKF theory, Joseph form, IEKF |
+| *Fundamentals of Spacecraft Attitude Determination and Control* | Markley & Crassidis | Spacecraft navigation, sensor fusion |
+| *Orbital Mechanics for Engineering Students* | Howard Curtis | Two-body problem, CW equations, coordinate frames |
+| *Statistical Orbit Determination* | Tapley, Schutz, Born | Orbit determination with EKF / UKF |
+| *Estimation with Applications to Tracking and Navigation* | Bar-Shalom, Li, Kirubarajan | Tracking, sensor fusion, recursive estimation |
+| *Kalman and Bayesian Filters in Python* | Roger Labbé ([free online](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python)) | Practical EKF with Python |
+
+### Key Papers
+
+| Title | Author(s) | Year | Relevance |
+|---|---|---|---|
+| [A New Approach to Linear Filtering and Prediction Problems](https://doi.org/10.1115/1.3662552) | R. E. Kalman | 1960 | Original Kalman filter |
+| [A Non-divergent Filter Formulation](https://doi.org/10.2514/6.1968-115) | R. H. Battin | 1968 | Joseph-form covariance update |
+| [Generalized Information Representation and CI for Decentralized Estimation](https://doi.org/10.1109/CDC.2002.1184291) | Julier & Uhlmann | 2002 | Covariance intersection theory |
+| [A Modular and Multi-Sensor Fusion Approach Based on an EKF](https://doi.org/10.3929/ethz-a-010008265) | Lynen et al. | 2013 | Decentralized EKF architecture |
+
+### Reference Implementations
+
+| Project | Language | Description |
+|---|---|---|
+| [ethzasl\_msf](https://github.com/ethz-asl/ethzasl_msf) | C++ / ROS | Modular EKF sensor fusion (ETH Zurich) |
+| [Orekit](https://www.orekit.org/) | Java | Orbit determination with EKF / UKF / ESKF |
+| [Kalman-and-Bayesian-Filters-in-Python](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python) | Python | Book-quality KF / EKF / UKF reference code |
+| [NAIF SPICE](https://naif.jpl.nasa.gov/naif/) | C / Python | Coordinate frames, time, ephemerides |
